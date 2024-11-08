@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; 
 import MovieCard from "../components/MovieCard";
-import { getMoviesFromStorage, saveMoviesToStorage } from "../data/localStorage";
 
 export default function MovieListPage() {
     const [search, setSearch] = useState("");
@@ -8,10 +7,19 @@ export default function MovieListPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [watchLater, setWatchLater] = useState([]);
+    const [watched, setWatched] = useState([]);
 
-    // Listas de filmes do LocalStorage
-    const [toWatchMovies, setToWatchMovies] = useState(getMoviesFromStorage("toWatchMovies"));
-    const [watchedMovies, setWatchedMovies] = useState(getMoviesFromStorage("watchedMovies"));
+    
+    useEffect(() => {
+        const loadMoviesFromLocalStorage = () => {
+            const watchLaterMovies = localStorage.getItem("watchLater");
+            const watchedMovies = localStorage.getItem("watched");
+            setWatchLater(watchLaterMovies ? JSON.parse(watchLaterMovies) : []);
+            setWatched(watchedMovies ? JSON.parse(watchedMovies) : []);
+        };
+        loadMoviesFromLocalStorage();
+    }, []);
 
     const fetchMovies = async () => {
         setIsLoading(true);
@@ -33,15 +41,15 @@ export default function MovieListPage() {
     };
 
     const fetchSearchedMovies = async () => {
-        if (!search) return;
+        if (!search) return; 
         setIsLoading(true);
         try {
             const res = await fetch(
                 `https://api.themoviedb.org/3/search/movie?api_key=7c572a9f5b3ba776080330d23bb76e1e&language=pt-BR&query=${search}`
             );
             const data = await res.json();
-            setFilmes(data.results);
-            setHasMore(false);
+            setFilmes(data.results); 
+            setHasMore(false); 
         } catch (error) {
             console.error("Erro ao buscar filmes:", error);
         } finally {
@@ -51,61 +59,74 @@ export default function MovieListPage() {
 
     useEffect(() => {
         if (search) {
-            fetchSearchedMovies();
+            fetchSearchedMovies(); 
         } else {
-            fetchMovies();
+            fetchMovies(); 
         }
     }, [page, search]);
 
-    // Função para adicionar filmes às listas
-    const addToWatchList = (filme) => {
-        const updatedList = [...toWatchMovies, filme];
-        setToWatchMovies(updatedList);
-        saveMoviesToStorage("toWatchMovies", updatedList);
+    const handleSearch = (event) => {
+        setSearch(event.target.value);
+        setPage(1); 
+        setHasMore(true); 
     };
 
-    const addToWatchedList = (filme) => {
-        const updatedList = [...watchedMovies, filme];
-        setWatchedMovies(updatedList);
-        saveMoviesToStorage("watchedMovies", updatedList);
+    const loadMoreMovies = () => {
+        if (hasMore) {
+            setPage(prevPage => prevPage + 1);
+        }
     };
 
-    const removeFromToWatchList = (filmeId) => {
-        const updatedList = toWatchMovies.filter((movie) => movie.id !== filmeId);
-        setToWatchMovies(updatedList);
-        saveMoviesToStorage("toWatchMovies", updatedList);
+    const addToWatchLater = (movie) => {
+        const updatedMovies = [...watchLater, movie];
+        setWatchLater(updatedMovies);
+        localStorage.setItem("watchLater", JSON.stringify(updatedMovies));
     };
 
-    const removeFromWatchedList = (filmeId) => {
-        const updatedList = watchedMovies.filter((movie) => movie.id !== filmeId);
-        setWatchedMovies(updatedList);
-        saveMoviesToStorage("watchedMovies", updatedList);
+    const addToWatched = (movie) => {
+        const updatedMovies = [...watched, movie];
+        setWatched(updatedMovies);
+        localStorage.setItem("watched", JSON.stringify(updatedMovies));
+    };
+
+    const removeFromWatchLater = (id) => {
+        const updatedMovies = watchLater.filter(movie => movie.id !== id);
+        setWatchLater(updatedMovies);
+        localStorage.setItem("watchLater", JSON.stringify(updatedMovies));
+    };
+
+    const removeFromWatched = (id) => {
+        const updatedMovies = watched.filter(movie => movie.id !== id);
+        setWatched(updatedMovies);
+        localStorage.setItem("watched", JSON.stringify(updatedMovies));
     };
 
     return (
         <div className="container mx-auto p-6">
             <h2 className="text-3xl font-bold text-center text-white mb-6">Veja o catálogo completo de filmes</h2>
-
             <div className="flex justify-center mb-8">
                 <input
                     className="w-full md:w-1/2 p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500 text-black"
                     type="text"
                     placeholder="Buscar filmes..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={handleSearch}
                 />
             </div>
-
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {isLoading && page === 1 ? (
                     <p className="text-center text-gray-700 text-lg font-medium col-span-full">Carregando...</p>
                 ) : filmes.length > 0 ? (
-                    filmes.map((filme) => (
-                        <MovieCard
-                            key={filme.id}
-                            {...filme}
-                            addToWatchList={addToWatchList}
-                            addToWatchedList={addToWatchedList}
+                    filmes.map(filme => (
+                        <MovieCard 
+                            key={filme.id} 
+                            {...filme} 
+                            addToWatchLater={addToWatchLater} 
+                            addToWatched={addToWatched}
+                            removeFromWatchLater={removeFromWatchLater}
+                            removeFromWatched={removeFromWatched}
+                            watchLater={watchLater}
+                            watched={watched}
                         />
                     ))
                 ) : (
@@ -116,10 +137,10 @@ export default function MovieListPage() {
             {!search && hasMore && (
                 <div className="text-center mt-8">
                     <button
-                        onClick={() => setPage(prevPage => prevPage + 1)}
-                        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                        onClick={loadMoreMovies}
+                        className="py-2 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                        Carregar Mais Filmes
+                        Carregar mais filmes
                     </button>
                 </div>
             )}

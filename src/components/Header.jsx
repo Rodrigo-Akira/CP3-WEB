@@ -3,12 +3,11 @@ import { NavLink } from "react-router-dom";
 import Login from "./Login";
 
 export default function Header() {
-
-    const [isLogged, setIsLogged] = useState(false)
+    const [isLogged, setIsLogged] = useState(false);
 
     const handleLogin = () => {
-        setIsLogged(!isLogged)
-    }
+        setIsLogged(!isLogged);
+    };
 
     return (
         <>
@@ -21,6 +20,8 @@ export default function Header() {
                         <li><NavLink to="/">Home</NavLink></li>
                         <li><NavLink to="/movies">Filmes</NavLink></li>
                         <li><NavLink to="/genre">Gêneros</NavLink></li>
+                        <li><NavLink to="/filmes-assistidos">Filmes Assistidos</NavLink></li> 
+                        <li><NavLink to="/minha-lista">Minha Lista</NavLink></li>
                         <li><NavLink to="/contato">Contato</NavLink></li>
                         {isLogged && <li><NavLink to="/settings">Configurações</NavLink></li>}
                     </ul>
@@ -28,5 +29,5 @@ export default function Header() {
                 <Login isLogged={isLogged} handleLogin={handleLogin} />
             </header>
         </>
-    )
+    );
 }

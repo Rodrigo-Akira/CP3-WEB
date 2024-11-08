@@ -1,14 +1,49 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import MovieCard from "../components/MovieCard";
+import React, { useEffect, useState } from "react"; 
+import { useParams } from "react-router-dom"; 
+import MovieCard from "../components/MovieCard"; 
 
-export default function MoviesByGenrePage() {
+export default function MoviesByGenrePage() { 
     const { id } = useParams(); 
-    const [movies, setMovies] = useState([]);
+    const [movies, setMovies] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
 
-    const API_KEY = '7c572a9f5b3ba776080330d23bb76e1e';
+
+    const [watchLater, setWatchLater] = useState(() => {
+        const savedWatchLater = localStorage.getItem("watchLater");
+        return savedWatchLater ? JSON.parse(savedWatchLater) : [];
+    }); 
+    const [watched, setWatched] = useState(() => {
+        const savedWatched = localStorage.getItem("watched");
+        return savedWatched ? JSON.parse(savedWatched) : [];
+    });
+
+    const API_KEY = '7c572a9f5b3ba776080330d23bb76e1e'; 
     const baseURL = 'https://api.themoviedb.org/3';
+
+
+    const addToWatchLater = (movie) => {
+        const updatedWatchLater = [...watchLater, movie];
+        setWatchLater(updatedWatchLater);
+        localStorage.setItem("watchLater", JSON.stringify(updatedWatchLater)); 
+    };
+
+    const addToWatched = (movie) => {
+        const updatedWatched = [...watched, movie];
+        setWatched(updatedWatched);
+        localStorage.setItem("watched", JSON.stringify(updatedWatched)); 
+    };
+
+    const removeFromWatchLater = (movieId) => {
+        const updatedWatchLater = watchLater.filter(movie => movie.id !== movieId);
+        setWatchLater(updatedWatchLater);
+        localStorage.setItem("watchLater", JSON.stringify(updatedWatchLater)); 
+    };
+
+    const removeFromWatched = (movieId) => {
+        const updatedWatched = watched.filter(movie => movie.id !== movieId);
+        setWatched(updatedWatched);
+        localStorage.setItem("watched", JSON.stringify(updatedWatched)); 
+    };
 
     useEffect(() => {
         async function fetchMoviesByGenre() {
@@ -27,7 +62,7 @@ export default function MoviesByGenrePage() {
         }
 
         fetchMoviesByGenre();
-    }, [id]); 
+    }, [id]);
 
     return (
         <div className="p-4">
@@ -37,7 +72,16 @@ export default function MoviesByGenrePage() {
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {movies.map((movie) => (
-                        <MovieCard key={movie.id} {...movie} />
+                        <MovieCard 
+                            key={movie.id} 
+                            {...movie} 
+                            addToWatchLater={addToWatchLater}
+                            addToWatched={addToWatched}
+                            removeFromWatchLater={removeFromWatchLater}
+                            removeFromWatched={removeFromWatched}
+                            watchLater={watchLater}
+                            watched={watched}
+                        />
                     ))}
                 </div>
             )}
